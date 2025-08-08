@@ -1,20 +1,38 @@
 export async function handler(event) {
+  // 예외 처리
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+      },
+      body: JSON.stringify({ error: 'Method Not Allowed' })
+    };
+  }
+
+  // Preflight 요청 대응 (OPTIONS)
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+      },
+      body: ''
+    };
+  }
+
   try {
     const { language, version, files } = JSON.parse(event.body);
-
-    const apiKey = process.env.ONECOMPILER_API_KEY;
-    if (!apiKey) {
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: "API key not found" })
-      };
-    }
 
     const res = await fetch('https://onecompiler-apis.p.rapidapi.com/api/v1/run', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-RapidAPI-Key': apiKey,
+        'X-RapidAPI-Key': process.env.ONECOMPILER_API_KEY,
         'X-RapidAPI-Host': 'onecompiler-apis.p.rapidapi.com'
       },
       body: JSON.stringify({ language, version, files })
@@ -24,12 +42,20 @@ export async function handler(event) {
 
     return {
       statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',  // ★ CORS 허용
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+      },
       body: JSON.stringify(data)
     };
-  } catch (e) {
+  } catch (error) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: e.message })
+      headers: {
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: JSON.stringify({ error: error.message })
     };
   }
 }

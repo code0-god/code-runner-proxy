@@ -94,7 +94,7 @@ function expandIncludes(originName, code, lookup, depth = 0, stack = new Set()) 
   if (depth > 32) return `/* include depth limit exceeded at ${originName} */\n` + code;
 
   // 실 include 패턴만 치환
-  const includeRE = /^\s*#\s*include\s*"([^"]+)"\s*$/gm;
+  const includeRE = /^[ \t]*#[ \t]*include[ \t]*"([^"]+)"[^\n]*$/gm;
 
   let out = '';
   let last = 0;
